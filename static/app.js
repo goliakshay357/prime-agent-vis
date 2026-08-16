@@ -20,6 +20,11 @@ let currentTimeline = null;
 let toolCallIdToResult = {};
 let toolCallIdToMeta = {};
 let liveInfo = null;
+let pollTimer = null;
+let renderedBlockCount = 0;
+let renderedTurn = 0;
+let renderedStep = 0;
+let polling = false;
 
 const THEME_KEY = "pav-theme";
 const SUN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
@@ -244,6 +249,7 @@ function renderHome() {
 
 // ─── View switching ───────────────────────────────────────────────
 function showHome() {
+  stopPolling();
   currentSessionId = null;
   currentTimeline = null;
   $("#timeline-view").hidden = true;
@@ -350,6 +356,7 @@ async function openSession(sessionId) {
   renderTimeline(currentTimeline.blocks);
   renderTurnSidebar(currentTimeline.blocks);
   updateActiveTurn();
+  startPolling();
 }
 
 function renderTopbar(summary) {
@@ -403,6 +410,8 @@ function renderTokenChart(turns) {
 function renderStatsBlock(summary) {
   const el = $("#stats-block");
   if (!el || !summary) return;
+  const prevBody = el.querySelector(".block-stats-body");
+  const wasExpanded = prevBody && prevBody.style.display !== "none";
   const totalInput = summary.input_tokens + summary.cache_read;
   const cacheRate = totalInput > 0 ? Math.round((summary.cache_read / totalInput) * 100) : 0;
   const parts = [
@@ -419,6 +428,12 @@ function renderStatsBlock(summary) {
       ${renderTokenChart(summary.turns_data)}
     </div>
   </div>`;
+  if (wasExpanded) {
+    const body = el.querySelector(".block-stats-body");
+    if (body) body.style.display = "block";
+    const chev = el.querySelector(".block-stats-label .chev");
+    if (chev) chev.textContent = "▼";
+  }
 }
 
 function renderTurnDivider(n) {
@@ -540,16 +555,12 @@ function onTimelineScroll() {
   });
 }
 
-function renderTimeline(blocks) {
-  const container = $("#timeline");
+function renderBlocksRange(blocks, startIndex, startTurn, startStep) {
   let html = "";
-  html += '<div id="stats-block"></div>';
-  if (currentTimeline && currentTimeline.system_prompt) {
-    html += renderSystemPromptBlock(currentTimeline.system_prompt);
-  }
-  let turn = 0;
-  let step = 0;
-  for (const b of blocks) {
+  let turn = startTurn;
+  let step = startStep;
+  for (let i = startIndex; i < blocks.length; i++) {
+    const b = blocks[i];
     if (b.type === "user_input") {
       turn++;
       step = 0;
@@ -562,7 +573,62 @@ function renderTimeline(blocks) {
     else if (b.type === "compaction") html += renderCompactionBlock(b);
     else if (b.type === "branch_summary") html += renderBranchSummaryBlock(b);
   }
+  return { html, turn, step };
+}
+
+function renderTimeline(blocks) {
+  const container = $("#timeline");
+  let html = '<div id="stats-block"></div>';
+  if (currentTimeline && currentTimeline.system_prompt) {
+    html += renderSystemPromptBlock(currentTimeline.system_prompt);
+  }
+  const r = renderBlocksRange(blocks, 0, 0, 0);
+  html += r.html;
   container.innerHTML = html;
+  renderedBlockCount = blocks.length;
+  renderedTurn = r.turn;
+  renderedStep = r.step;
+}
+
+function startPolling() {
+  stopPolling();
+  pollTimer = setInterval(pollTimeline, 1000);
+}
+
+function stopPolling() {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+}
+
+async function pollTimeline() {
+  if (polling || !currentSessionId) return;
+  polling = true;
+  try {
+    const res = await fetch("/api/sessions/" + encodeURIComponent(currentSessionId));
+    if (!res.ok) return;
+    const tl = await res.json();
+    const blocks = tl.blocks || [];
+    if (blocks.length > renderedBlockCount) {
+      const r = renderBlocksRange(blocks, renderedBlockCount, renderedTurn, renderedStep);
+      $("#timeline").insertAdjacentHTML("beforeend", r.html);
+      renderedBlockCount = blocks.length;
+      renderedTurn = r.turn;
+      renderedStep = r.step;
+      renderTurnSidebar(blocks);
+    } else if (blocks.length < renderedBlockCount) {
+      renderTimeline(blocks);
+      renderTurnSidebar(blocks);
+      updateActiveTurn();
+    }
+    try {
+      const sres = await fetch("/api/sessions/" + encodeURIComponent(currentSessionId) + "/summary");
+      if (sres.ok) {
+        const summary = await sres.json();
+        renderTopbar(summary);
+        renderStatsBlock(summary);
+      }
+    } catch (e) {}
+  } catch (e) {}
+  finally { polling = false; }
 }
 
 function renderUserBlock(block) {
