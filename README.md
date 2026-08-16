@@ -1,6 +1,8 @@
 # Prime Agent Vis
 
-A visualizer + debugger for [Prime Agent](https://github.com/PrimeIntellect-ai/prime-agent) sessions. It reads a session's `.jsonl` file and renders the full **LLM in/out timeline** in the browser — what went into the model and what came out, turn by turn.
+A visualizer + debugger for [Prime Agent](https://github.com/PrimeIntellect-ai/prime-agent) sessions. Know what went into the model and what came out, turn by turn.
+
+<img width="1425" height="733" alt="image" src="https://github.com/user-attachments/assets/caae1425-5a84-4fb1-b792-3d76bc23698b" />
 
 ## Features
 
