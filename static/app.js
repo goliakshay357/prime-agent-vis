@@ -391,9 +391,9 @@ function renderLlmBlock(block) {
     const chars = block.thinking.length;
     body += `<div class="block-thinking">
       <div class="block-thinking-label" onclick="toggleCollapse(this)">
-        <span class="chev">▶</span> 💭 Thinking <span class="count">· ${chars} chars</span>
+        <span class="chev">▼</span> 💭 Thinking <span class="count">· ${chars} chars</span>
       </div>
-      <div class="block-thinking-body" style="display:none;">${escapeHtml(block.thinking)}</div>
+      <div class="block-thinking-body">${escapeHtml(block.thinking)}</div>
     </div>`;
   }
   if (block.text) {
