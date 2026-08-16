@@ -346,6 +346,7 @@ async function openSession(sessionId) {
 
   renderTimeline(currentTimeline.blocks);
   renderTurnSidebar(currentTimeline.blocks);
+  updateActiveTurn();
 }
 
 function renderTopbar(summary) {
@@ -419,6 +420,36 @@ function scrollToTurn(n) {
   document.querySelectorAll(".turn-item").forEach((it) => it.classList.remove("active"));
   const item = document.querySelector('.turn-item[data-turn="' + n + '"]');
   if (item) item.classList.add("active");
+}
+
+function updateActiveTurn() {
+  const timeline = $("#timeline");
+  if (!timeline) return;
+  const timelineTop = timeline.getBoundingClientRect().top;
+  let current = 1;
+  for (const d of timeline.querySelectorAll(".turn-divider")) {
+    if (d.getBoundingClientRect().top - timelineTop <= 80) {
+      current = parseInt(d.id.replace("turn-", ""), 10);
+    } else {
+      break;
+    }
+  }
+  document.querySelectorAll(".turn-item").forEach((it) => it.classList.remove("active"));
+  const item = document.querySelector('.turn-item[data-turn="' + current + '"]');
+  if (item) {
+    item.classList.add("active");
+    item.scrollIntoView({ block: "nearest" });
+  }
+}
+
+let scrollSpyTicking = false;
+function onTimelineScroll() {
+  if (scrollSpyTicking) return;
+  scrollSpyTicking = true;
+  requestAnimationFrame(() => {
+    updateActiveTurn();
+    scrollSpyTicking = false;
+  });
 }
 
 function renderTimeline(blocks) {
@@ -611,6 +642,8 @@ function bindEvents() {
   });
 
   $("#kernel-toggle").addEventListener("click", toggleKernel);
+
+  $("#timeline").addEventListener("scroll", onTimelineScroll);
 
   // Delegate clicks on the session list (group collapse + session select).
   $("#session-list").addEventListener("click", (e) => {
