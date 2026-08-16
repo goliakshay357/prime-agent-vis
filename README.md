@@ -14,6 +14,8 @@ A visualizer + debugger for [Prime Agent](https://github.com/PrimeIntellect-ai/p
 - **Live updates** — the timeline polls the session file every second
 - **Live kernel** — embed a real JupyterLab attached to the running kernel (optional)
 
+<img width="1429" height="738" alt="image" src="https://github.com/user-attachments/assets/6e9bbcc8-f09a-4cc8-bf0a-92ff1922b14f" />
+
 ## Install
 
 ```bash
