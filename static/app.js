@@ -377,13 +377,25 @@ function renderSystemPromptBlock(prompt) {
   </div>`;
 }
 
+function renderTurnDivider(n) {
+  return `<div class="turn-divider">
+    <span class="turn-number">Turn ${n}</span>
+    <span class="turn-rule"></span>
+  </div>`;
+}
+
 function renderTimeline(blocks) {
   const container = $("#timeline");
   let html = "";
   if (currentTimeline && currentTimeline.system_prompt) {
     html += renderSystemPromptBlock(currentTimeline.system_prompt);
   }
+  let turn = 0;
   for (const b of blocks) {
+    if (b.type === "user_input") {
+      turn++;
+      html += renderTurnDivider(turn);
+    }
     if (b.type === "user_input") html += renderUserBlock(b);
     else if (b.type === "llm_output") html += renderLlmBlock(b);
     else if (b.type === "tool_result") html += renderToolResultBlock(b);
