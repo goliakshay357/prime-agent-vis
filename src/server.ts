@@ -22,6 +22,8 @@ import { parseSession, listSessions, computeSummary, type SessionTimeline, type 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const STATIC_DIR = join(__dirname, "..", "static");
 const DEFAULT_PORT = 8765;
+const LIVE_SESSION_ID = process.env.PRIME_VIS_LIVE_SESSION ?? "01a00950-b7dc-76e2-8f8d-5c2f99191da9";
+const JUPYTER_URL = process.env.PRIME_VIS_JUPYTER_URL ?? "http://localhost:8890/lab/tree/kernel-live.ipynb?token=kimi";
 
 const MIME_TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -78,6 +80,10 @@ function serveStatic(path: string, res: ServerResponse): void {
 }
 
 // ─── API Handlers ────────────────────────────────────────────────────
+
+function handleGetLive(res: ServerResponse): void {
+  sendJson(res, { live_session_id: LIVE_SESSION_ID, jupyter_url: JUPYTER_URL });
+}
 
 function handleListSessions(res: ServerResponse): void {
   try {
@@ -140,6 +146,11 @@ function handleRequest(req: IncomingMessage, res: ServerResponse): void {
   }
 
   // API routes
+  if (url === "/api/live") {
+    handleGetLive(res);
+    return;
+  }
+
   if (url === "/api/sessions") {
     handleListSessions(res);
     return;
