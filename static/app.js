@@ -266,8 +266,8 @@ function isLiveSession(id) {
 function hideKernel() {
   const panel = $("#kernel-panel");
   if (panel) panel.hidden = true;
-  const timeline = $("#timeline");
-  if (timeline) timeline.hidden = false;
+  const split = $(".timeline-split");
+  if (split) split.hidden = false;
   const kt = $("#kernel-toggle");
   if (kt) kt.setAttribute("aria-pressed", "false");
 }
@@ -287,7 +287,8 @@ function toggleKernel() {
   if (panel.hidden) {
     const iframe = $("#kernel-iframe");
     if (iframe && !iframe.getAttribute("src")) iframe.setAttribute("src", liveInfo.jupyter_url);
-    timeline.hidden = true;
+    const split = $(".timeline-split");
+    if (split) split.hidden = true;
     panel.hidden = false;
     $("#kernel-toggle").setAttribute("aria-pressed", "true");
   } else {
@@ -344,6 +345,7 @@ async function openSession(sessionId) {
   }
 
   renderTimeline(currentTimeline.blocks);
+  renderTurnSidebar(currentTimeline.blocks);
 }
 
 function renderTopbar(summary) {
@@ -378,10 +380,45 @@ function renderSystemPromptBlock(prompt) {
 }
 
 function renderTurnDivider(n) {
-  return `<div class="turn-divider">
+  return `<div class="turn-divider" id="turn-${n}">
     <span class="turn-number">Turn ${n}</span>
     <span class="turn-rule"></span>
   </div>`;
+}
+
+function turnTitle(text) {
+  if (!text) return "(empty)";
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  return truncate(lines.slice(0, 2).join(" "), 80);
+}
+
+function renderTurnItem(t) {
+  return `<div class="turn-item" data-turn="${t.number}" onclick="scrollToTurn(${t.number})">
+    <span class="turn-item-number">${t.number}</span>
+    <span class="turn-item-title">${escapeHtml(t.title)}</span>
+  </div>`;
+}
+
+function renderTurnSidebar(blocks) {
+  const sidebar = $("#turn-sidebar");
+  if (!sidebar) return;
+  let html = "";
+  let n = 0;
+  for (const b of blocks) {
+    if (b.type === "user_input") {
+      n++;
+      html += renderTurnItem({ number: n, title: turnTitle(b.text) });
+    }
+  }
+  sidebar.innerHTML = html || '<div class="turn-sidebar-empty">No turns</div>';
+}
+
+function scrollToTurn(n) {
+  const el = document.getElementById("turn-" + n);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  document.querySelectorAll(".turn-item").forEach((it) => it.classList.remove("active"));
+  const item = document.querySelector('.turn-item[data-turn="' + n + '"]');
+  if (item) item.classList.add("active");
 }
 
 function renderTimeline(blocks) {

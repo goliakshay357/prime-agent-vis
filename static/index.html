@@ -54,7 +54,10 @@
         <div class="timeline-stats" id="timeline-stats"></div>
         <button id="kernel-toggle" class="control toggle" aria-pressed="false" hidden title="Show the live Jupyter kernel">🐍 Live Kernel</button>
       </header>
-      <main id="timeline" class="timeline"></main>
+      <div class="timeline-split">
+        <aside id="turn-sidebar" class="turn-sidebar"></aside>
+        <main id="timeline" class="timeline"></main>
+      </div>
       <div id="kernel-panel" hidden>
         <iframe id="kernel-iframe" src="" allow="clipboard-read; clipboard-write" title="Live kernel"></iframe>
       </div>
