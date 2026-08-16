@@ -361,6 +361,9 @@ function renderTopbar(summary) {
   if (summary.errors) {
     parts.push(`<span style="color:var(--red)">⚠ <span class="value">${summary.errors}</span> error${summary.errors === 1 ? "" : "s"}</span>`);
   }
+  if (summary.compactions) {
+    parts.push(`<span style="color:var(--orange)">🧹 <span class="value">${summary.compactions}</span> compaction${summary.compactions === 1 ? "" : "s"}</span>`);
+  }
   $("#timeline-stats").innerHTML = parts.join("");
 }
 
@@ -371,6 +374,9 @@ function renderTimeline(blocks) {
     if (b.type === "user_input") html += renderUserBlock(b);
     else if (b.type === "llm_output") html += renderLlmBlock(b);
     else if (b.type === "tool_result") html += renderToolResultBlock(b);
+    else if (b.type === "custom_message") html += renderCustomMessageBlock(b);
+    else if (b.type === "compaction") html += renderCompactionBlock(b);
+    else if (b.type === "branch_summary") html += renderBranchSummaryBlock(b);
   }
   container.innerHTML = html;
 }
@@ -447,6 +453,34 @@ function renderToolResultBlock(block) {
       <span class="block-tool-chevron" id="chevron-${block.index}">▶</span>
     </div>
     <div class="${outputClass}" id="output-${block.index}" style="display:none;">${escapeHtml(block.output || "(no output)")}</div>
+  </div>`;
+}
+
+function renderCustomMessageBlock(block) {
+  const chars = (block.text || "").length;
+  return `<div class="block block-custom">
+    <div class="block-custom-label" onclick="toggleCollapse(this)">
+      <span class="chev">▼</span> 🔌 Custom message · ${escapeHtml(block.custom_type)} <span class="count">· ${chars} chars</span>
+    </div>
+    <div class="block-custom-text">${escapeHtml(block.text)}</div>
+  </div>`;
+}
+
+function renderCompactionBlock(block) {
+  return `<div class="block block-compaction">
+    <div class="block-compaction-label" onclick="toggleCollapse(this)">
+      <span class="chev">▼</span> 🧹 Context compacted <span class="count">· ${formatTokens(block.tokens_before)} tokens before</span>
+    </div>
+    <div class="block-compaction-summary">${escapeHtml(block.summary)}</div>
+  </div>`;
+}
+
+function renderBranchSummaryBlock(block) {
+  return `<div class="block block-branch">
+    <div class="block-branch-label" onclick="toggleCollapse(this)">
+      <span class="chev">▼</span> 🌿 Branch summary
+    </div>
+    <div class="block-branch-summary">${escapeHtml(block.summary)}</div>
   </div>`;
 }
 

@@ -62,6 +62,27 @@ export type TimelineBlock =
       details?: Record<string, unknown>;
       is_error: boolean;
       index: number;
+    }
+  | {
+      type: "custom_message";
+      timestamp: string;
+      custom_type: string;
+      text: string;
+      index: number;
+    }
+  | {
+      type: "compaction";
+      timestamp: string;
+      summary: string;
+      tokens_before: number;
+      index: number;
+    }
+  | {
+      type: "branch_summary";
+      timestamp: string;
+      from_id: string;
+      summary: string;
+      index: number;
     };
 
 export interface SessionTimeline {
@@ -237,8 +258,44 @@ export function parseSession(filePath: string): SessionTimeline | null {
       }
     }
 
-    // Skip: agent_status, git_state, session_state, custom, custom_message,
-    // compaction, branch_summary, label, session_info, child_usage_attributed
+    // Custom message (extension-injected input sent to the LLM)
+    if (type === "custom_message") {
+      blocks.push({
+        type: "custom_message",
+        timestamp: entry.timestamp ?? "",
+        custom_type: entry.customType ?? "custom",
+        text: extractText(entry.content),
+        index: blockIndex++,
+      });
+      continue;
+    }
+
+    // Context compaction (history replaced by a summary)
+    if (type === "compaction") {
+      blocks.push({
+        type: "compaction",
+        timestamp: entry.timestamp ?? "",
+        summary: entry.summary ?? "",
+        tokens_before: entry.tokensBefore ?? 0,
+        index: blockIndex++,
+      });
+      continue;
+    }
+
+    // Branch summary (tree navigation)
+    if (type === "branch_summary") {
+      blocks.push({
+        type: "branch_summary",
+        timestamp: entry.timestamp ?? "",
+        from_id: entry.fromId ?? "",
+        summary: entry.summary ?? "",
+        index: blockIndex++,
+      });
+      continue;
+    }
+
+    // Skip: agent_status, git_state, session_state, custom, label,
+    // session_info, child_usage_attributed
   }
 
   if (!header) return null;
@@ -326,6 +383,7 @@ export interface SessionSummary {
   llm_calls: number;
   tool_calls: number;
   errors: number;
+  compactions: number;
   input_tokens: number;
   output_tokens: number;
   total_tokens: number;
@@ -339,6 +397,7 @@ export function computeSummary(timeline: SessionTimeline): SessionSummary {
   let llmCalls = 0;
   let toolCalls = 0;
   let errors = 0;
+  let compactions = 0;
   let inputTokens = 0;
   let outputTokens = 0;
   let totalTokens = 0;
@@ -374,6 +433,8 @@ export function computeSummary(timeline: SessionTimeline): SessionSummary {
       }
     } else if (block.type === "tool_result") {
       if (block.is_error) errors++;
+    } else if (block.type === "compaction") {
+      compactions++;
     }
   }
 
@@ -385,6 +446,7 @@ export function computeSummary(timeline: SessionTimeline): SessionSummary {
     llm_calls: llmCalls,
     tool_calls: toolCalls,
     errors,
+    compactions,
     input_tokens: inputTokens,
     output_tokens: outputTokens,
     total_tokens: totalTokens,

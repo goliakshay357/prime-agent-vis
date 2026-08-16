@@ -202,6 +202,39 @@ def parse_session(file_path):
                     }
                 )
                 index += 1
+        elif etype == "custom_message":
+            blocks.append(
+                {
+                    "type": "custom_message",
+                    "timestamp": entry.get("timestamp", ""),
+                    "custom_type": entry.get("customType", "custom"),
+                    "text": _extract_text(entry.get("content")),
+                    "index": index,
+                }
+            )
+            index += 1
+        elif etype == "compaction":
+            blocks.append(
+                {
+                    "type": "compaction",
+                    "timestamp": entry.get("timestamp", ""),
+                    "summary": entry.get("summary", ""),
+                    "tokens_before": entry.get("tokensBefore", 0),
+                    "index": index,
+                }
+            )
+            index += 1
+        elif etype == "branch_summary":
+            blocks.append(
+                {
+                    "type": "branch_summary",
+                    "timestamp": entry.get("timestamp", ""),
+                    "from_id": entry.get("fromId", ""),
+                    "summary": entry.get("summary", ""),
+                    "index": index,
+                }
+            )
+            index += 1
 
     if header is None:
         return None
@@ -252,6 +285,7 @@ def compute_summary(timeline):
     llm_calls = 0
     tool_calls = 0
     errors = 0
+    compactions = 0
     input_tokens = 0
     output_tokens = 0
     total_tokens = 0
@@ -289,6 +323,8 @@ def compute_summary(timeline):
         elif btype == "tool_result":
             if block.get("is_error"):
                 errors += 1
+        elif btype == "compaction":
+            compactions += 1
 
     duration_sec = (last_ts - first_ts) / 1000.0 if first_ts is not None and last_ts is not None else 0.0
 
@@ -298,6 +334,7 @@ def compute_summary(timeline):
         "llm_calls": llm_calls,
         "tool_calls": tool_calls,
         "errors": errors,
+        "compactions": compactions,
         "input_tokens": input_tokens,
         "output_tokens": output_tokens,
         "total_tokens": total_tokens,
