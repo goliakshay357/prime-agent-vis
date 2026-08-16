@@ -37,6 +37,18 @@ async function openInBrowser(pi: ExtensionAPI, url: string): Promise<void> {
 }
 
 export default function (pi: ExtensionAPI) {
+  // The system prompt is assembled at runtime and not otherwise persisted.
+  // Capture it once per session as a `custom` entry so the visualizer can show it.
+  let systemPromptCaptured = false;
+  pi.on("session_start", async () => {
+    systemPromptCaptured = false;
+  });
+  pi.on("before_agent_start", async (event) => {
+    if (systemPromptCaptured) return;
+    systemPromptCaptured = true;
+    pi.appendEntry("system_prompt", { prompt: event.systemPrompt });
+  });
+
   pi.registerCommand("vis", {
     description: "Open the Prime Agent session visualizer in your browser",
     handler: async (args, ctx) => {

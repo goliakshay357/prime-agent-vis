@@ -131,6 +131,7 @@ def parse_session(file_path):
     header = None
     model = "unknown"
     thinking_level = "off"
+    system_prompt = None
     blocks = []
     index = 0
 
@@ -202,6 +203,10 @@ def parse_session(file_path):
                     }
                 )
                 index += 1
+        elif etype == "custom" and entry.get("customType") == "system_prompt":
+            data = entry.get("data") or {}
+            if isinstance(data, dict) and data.get("prompt"):
+                system_prompt = data["prompt"]
         elif etype == "custom_message":
             blocks.append(
                 {
@@ -238,7 +243,7 @@ def parse_session(file_path):
 
     if header is None:
         return None
-    return {"header": header, "model": model, "thinking_level": thinking_level, "blocks": blocks}
+    return {"header": header, "model": model, "thinking_level": thinking_level, "system_prompt": system_prompt, "blocks": blocks}
 
 
 def list_sessions():

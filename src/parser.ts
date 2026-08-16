@@ -89,6 +89,7 @@ export interface SessionTimeline {
   header: SessionHeader;
   model: string;
   thinking_level: string;
+  system_prompt?: string;
   blocks: TimelineBlock[];
 }
 
@@ -167,6 +168,7 @@ export function parseSession(filePath: string): SessionTimeline | null {
   let header: SessionHeader | null = null;
   let model = "unknown";
   let thinkingLevel = "off";
+  let systemPrompt: string | undefined;
   const blocks: TimelineBlock[] = [];
   let blockIndex = 0;
 
@@ -258,6 +260,12 @@ export function parseSession(filePath: string): SessionTimeline | null {
       }
     }
 
+    // System prompt (captured by the extension at runtime)
+    if (type === "custom" && entry.customType === "system_prompt" && entry.data?.prompt) {
+      systemPrompt = entry.data.prompt;
+      continue;
+    }
+
     // Custom message (extension-injected input sent to the LLM)
     if (type === "custom_message") {
       blocks.push({
@@ -304,6 +312,7 @@ export function parseSession(filePath: string): SessionTimeline | null {
     header,
     model,
     thinking_level: thinkingLevel,
+    system_prompt: systemPrompt,
     blocks,
   };
 }

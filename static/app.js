@@ -367,9 +367,22 @@ function renderTopbar(summary) {
   $("#timeline-stats").innerHTML = parts.join("");
 }
 
+function renderSystemPromptBlock(prompt) {
+  const chars = (prompt || "").length;
+  return `<div class="block block-system">
+    <div class="block-system-label" onclick="toggleCollapse(this)">
+      <span class="chev">▶</span> ⚙️ System prompt <span class="count">· ${chars} chars</span>
+    </div>
+    <div class="block-system-text" style="display:none;">${escapeHtml(prompt)}</div>
+  </div>`;
+}
+
 function renderTimeline(blocks) {
   const container = $("#timeline");
   let html = "";
+  if (currentTimeline && currentTimeline.system_prompt) {
+    html += renderSystemPromptBlock(currentTimeline.system_prompt);
+  }
   for (const b of blocks) {
     if (b.type === "user_input") html += renderUserBlock(b);
     else if (b.type === "llm_output") html += renderLlmBlock(b);
