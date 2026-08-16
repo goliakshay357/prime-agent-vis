@@ -224,7 +224,7 @@ code.hint { font-family: ui-monospace, Menlo, monospace; background: var(--bg-ho
 .block-llm { border-left: 3px solid var(--yellow); }
 .block-llm-header { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.74rem; flex-wrap: wrap; }
 .block-llm-label { color: var(--yellow); font-weight: 600; text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.05em; }
-.step-label { font-size: 0.62rem; font-weight: 600; color: var(--text-dim); background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 0.05rem 0.4rem; flex-shrink: 0; }
+.step-label { font-size: 0.62rem; font-weight: 600; color: var(--yellow); background: var(--bg); border: 1px solid var(--yellow); border-radius: 4px; padding: 0.05rem 0.45rem; flex-shrink: 0; letter-spacing: 0.03em; }
 .block-llm-model { color: var(--purple); font-size: 0.68rem; font-family: ui-monospace, Menlo, monospace; }
 .block-llm-usage { color: var(--text-dim); font-size: 0.68rem; margin-left: auto; }
 .block-llm-body { padding: 0 1rem 0.5rem 1rem; }
