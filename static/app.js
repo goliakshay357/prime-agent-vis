@@ -385,9 +385,9 @@ function renderUserBlock(block) {
   const chars = (block.text || "").length;
   return `<div class="block block-user">
     <div class="block-user-label" onclick="toggleCollapse(this)">
-      <span class="chev">▼</span> 👤 User input <span class="count">· ${chars} chars</span>
+      <span class="chev">▶</span> 👤 User input <span class="count">· ${chars} chars</span>
     </div>
-    <div class="block-user-text">${escapeHtml(block.text)}</div>
+    <div class="block-user-text" style="display:none;">${escapeHtml(block.text)}</div>
   </div>`;
 }
 
@@ -397,13 +397,17 @@ function renderLlmBlock(block) {
     const chars = block.thinking.length;
     body += `<div class="block-thinking">
       <div class="block-thinking-label" onclick="toggleCollapse(this)">
-        <span class="chev">▼</span> 💭 Thinking <span class="count">· ${chars} chars</span>
+        <span class="chev">▶</span> 💭 Thinking <span class="count">· ${chars} chars</span>
       </div>
-      <div class="block-thinking-body">${escapeHtml(block.thinking)}</div>
+      <div class="block-thinking-body" style="display:none;">${escapeHtml(block.thinking)}</div>
     </div>`;
   }
   if (block.text) {
-    body += `<div class="block-text">${escapeHtml(block.text)}</div>`;
+    const chars = block.text.length;
+    body += `<div class="block-text-label" onclick="toggleCollapse(this)">
+      <span class="chev">▶</span> 💬 Text <span class="count">· ${chars} chars</span>
+    </div>
+    <div class="block-text" style="display:none;">${escapeHtml(block.text)}</div>`;
   }
   for (const tc of block.tool_calls) {
     const argsJson = prettyJson(tc.arguments);
@@ -460,27 +464,27 @@ function renderCustomMessageBlock(block) {
   const chars = (block.text || "").length;
   return `<div class="block block-custom">
     <div class="block-custom-label" onclick="toggleCollapse(this)">
-      <span class="chev">▼</span> 🔌 Custom message · ${escapeHtml(block.custom_type)} <span class="count">· ${chars} chars</span>
+      <span class="chev">▶</span> 🔌 Custom message · ${escapeHtml(block.custom_type)} <span class="count">· ${chars} chars</span>
     </div>
-    <div class="block-custom-text">${escapeHtml(block.text)}</div>
+    <div class="block-custom-text" style="display:none;">${escapeHtml(block.text)}</div>
   </div>`;
 }
 
 function renderCompactionBlock(block) {
   return `<div class="block block-compaction">
     <div class="block-compaction-label" onclick="toggleCollapse(this)">
-      <span class="chev">▼</span> 🧹 Context compacted <span class="count">· ${formatTokens(block.tokens_before)} tokens before</span>
+      <span class="chev">▶</span> 🧹 Context compacted <span class="count">· ${formatTokens(block.tokens_before)} tokens before</span>
     </div>
-    <div class="block-compaction-summary">${escapeHtml(block.summary)}</div>
+    <div class="block-compaction-summary" style="display:none;">${escapeHtml(block.summary)}</div>
   </div>`;
 }
 
 function renderBranchSummaryBlock(block) {
   return `<div class="block block-branch">
     <div class="block-branch-label" onclick="toggleCollapse(this)">
-      <span class="chev">▼</span> 🌿 Branch summary
+      <span class="chev">▶</span> 🌿 Branch summary
     </div>
-    <div class="block-branch-summary">${escapeHtml(block.summary)}</div>
+    <div class="block-branch-summary" style="display:none;">${escapeHtml(block.summary)}</div>
   </div>`;
 }
 

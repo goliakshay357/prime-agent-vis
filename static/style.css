@@ -233,6 +233,10 @@ code.hint { font-family: ui-monospace, Menlo, monospace; background: var(--bg-ho
 .block-thinking-label .chev { font-size: 0.6rem; }
 .block-thinking-label .count { color: var(--text-dim); font-size: 0.6rem; }
 .block-thinking-body { font-size: 0.74rem; color: var(--text-dim); font-style: italic; padding: 0 0.5rem 0.5rem; white-space: pre-wrap; word-break: break-word; max-height: 400px; overflow-y: auto; }
+.block-text-label { font-size: 0.62rem; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; gap: 0.35rem; user-select: none; margin-bottom: 0.3rem; }
+.block-text-label:hover { color: var(--text-bright); }
+.block-text-label .chev { font-size: 0.6rem; }
+.block-text-label .count { color: var(--text-dim); font-size: 0.6rem; }
 .block-text { font-size: 0.82rem; color: var(--text); white-space: pre-wrap; word-break: break-word; margin-bottom: 0.5rem; }
 
 .tool-call { border: 1px solid var(--orange); border-radius: 5px; margin-top: 0.5rem; background: rgba(219,109,40,0.06); cursor: pointer; }
