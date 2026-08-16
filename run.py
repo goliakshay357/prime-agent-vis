@@ -60,13 +60,10 @@ def _extract_thinking(content):
     if not isinstance(content, list):
         return None
     for b in content:
-        if (
-            isinstance(b, dict)
-            and b.get("type") == "thinking"
-            and isinstance(b.get("text"), str)
-            and b["text"]
-        ):
-            return b["text"]
+        if isinstance(b, dict) and b.get("type") == "thinking":
+            t = b.get("thinking") or b.get("text")  # 'thinking' is the real field
+            if isinstance(t, str) and t:
+                return t
     return None
 
 

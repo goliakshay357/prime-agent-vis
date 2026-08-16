@@ -98,8 +98,9 @@ function extractText(content: unknown): string {
 function extractThinking(content: unknown): string | undefined {
   if (!Array.isArray(content)) return undefined;
   for (const block of content as any[]) {
-    if (block?.type === "thinking" && typeof block.text === "string" && block.text.length > 0) {
-      return block.text;
+    if (block?.type === "thinking") {
+      const t = block.thinking ?? block.text; // 'thinking' is the real field; 'text' as fallback
+      if (typeof t === "string" && t.length > 0) return t;
     }
   }
   return undefined;

@@ -376,8 +376,11 @@ function renderTimeline(blocks) {
 }
 
 function renderUserBlock(block) {
+  const chars = (block.text || "").length;
   return `<div class="block block-user">
-    <div class="block-user-label">👤 User input</div>
+    <div class="block-user-label" onclick="toggleCollapse(this)">
+      <span class="chev">▼</span> 👤 User input <span class="count">· ${chars} chars</span>
+    </div>
     <div class="block-user-text">${escapeHtml(block.text)}</div>
   </div>`;
 }
@@ -385,7 +388,13 @@ function renderUserBlock(block) {
 function renderLlmBlock(block) {
   let body = "";
   if (block.thinking) {
-    body += `<div class="block-thinking"><div class="block-thinking-label">💭 Thinking</div>${escapeHtml(truncate(block.thinking, 1000))}</div>`;
+    const chars = block.thinking.length;
+    body += `<div class="block-thinking">
+      <div class="block-thinking-label" onclick="toggleCollapse(this)">
+        <span class="chev">▶</span> 💭 Thinking <span class="count">· ${chars} chars</span>
+      </div>
+      <div class="block-thinking-body" style="display:none;">${escapeHtml(block.thinking)}</div>
+    </div>`;
   }
   if (block.text) {
     body += `<div class="block-text">${escapeHtml(block.text)}</div>`;
@@ -442,6 +451,15 @@ function renderToolResultBlock(block) {
 }
 
 // ─── Timeline interactions ────────────────────────────────────────
+function toggleCollapse(headerEl) {
+  const body = headerEl.nextElementSibling;
+  const chev = headerEl.querySelector(".chev");
+  if (!body) return;
+  const wasHidden = body.style.display === "none";
+  body.style.display = wasHidden ? "block" : "none";
+  if (chev) chev.textContent = wasHidden ? "▼" : "▶";
+}
+
 function toggleArgs(headerEl) {
   const argsEl = headerEl.parentNode.querySelector(".tool-call-args");
   const chevron = headerEl.querySelector(".tool-call-chevron");
