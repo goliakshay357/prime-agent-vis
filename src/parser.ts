@@ -32,7 +32,9 @@ export interface UsageInfo {
   input: number;
   output: number;
   totalTokens: number;
-  cost?: { input?: number; output?: number; total?: number };
+  cache_read?: number;
+  cache_write?: number;
+  cost?: { input?: number; output?: number; cacheRead?: number; cacheWrite?: number; total?: number };
 }
 
 export type TimelineBlock =
@@ -235,6 +237,8 @@ export function parseSession(filePath: string): SessionTimeline | null {
                 input: msg.usage.input ?? 0,
                 output: msg.usage.output ?? 0,
                 totalTokens: msg.usage.totalTokens ?? 0,
+                cache_read: msg.usage.cacheRead ?? 0,
+                cache_write: msg.usage.cacheWrite ?? 0,
                 cost: msg.usage.cost,
               }
             : undefined,
@@ -386,6 +390,14 @@ export function listSessions(): SessionListItem[] {
 
 // ─── Summary Stats ───────────────────────────────────────────────────
 
+export interface TurnStat {
+  turn: number;
+  input: number;
+  output: number;
+  cache: number;
+  cost: number;
+}
+
 export interface SessionSummary {
   session_id: string;
   turns: number;
@@ -397,8 +409,13 @@ export interface SessionSummary {
   output_tokens: number;
   total_tokens: number;
   total_cost: number;
+  cache_read: number;
+  cache_write: number;
+  tool_duration_ms: number;
+  slowest_tool: { name: string; duration_ms: number } | null;
   duration_sec: number;
   tools_used: Record<string, number>;
+  turns_data: TurnStat[];
 }
 
 export function computeSummary(timeline: SessionTimeline): SessionSummary {
@@ -411,7 +428,13 @@ export function computeSummary(timeline: SessionTimeline): SessionSummary {
   let outputTokens = 0;
   let totalTokens = 0;
   let totalCost = 0;
+  let cacheRead = 0;
+  let cacheWrite = 0;
+  let toolDurationMs = 0;
+  let slowestTool: { name: string; duration_ms: number } | null = null;
   const toolsUsed: Record<string, number> = {};
+  const turnsData: TurnStat[] = [];
+  let currentTurn = 0;
 
   let firstTs: number | null = null;
   let lastTs: number | null = null;
@@ -426,6 +449,8 @@ export function computeSummary(timeline: SessionTimeline): SessionSummary {
 
     if (block.type === "user_input") {
       turns++;
+      currentTurn++;
+      turnsData.push({ turn: currentTurn, input: 0, output: 0, cache: 0, cost: 0 });
     } else if (block.type === "llm_output") {
       llmCalls++;
       toolCalls += block.tool_calls.length;
@@ -436,12 +461,28 @@ export function computeSummary(timeline: SessionTimeline): SessionSummary {
         inputTokens += block.usage.input;
         outputTokens += block.usage.output;
         totalTokens += block.usage.totalTokens;
+        cacheRead += block.usage.cache_read ?? 0;
+        cacheWrite += block.usage.cache_write ?? 0;
         if (block.usage.cost?.total) {
           totalCost += block.usage.cost.total;
+        }
+        const t = turnsData[currentTurn - 1];
+        if (t) {
+          t.input += block.usage.input;
+          t.output += block.usage.output;
+          t.cache += block.usage.cache_read ?? 0;
+          t.cost += block.usage.cost?.total ?? 0;
         }
       }
     } else if (block.type === "tool_result") {
       if (block.is_error) errors++;
+      const dur = typeof block.details?.durationMs === "number" ? block.details.durationMs : 0;
+      if (dur > 0) {
+        toolDurationMs += dur;
+        if (!slowestTool || dur > slowestTool.duration_ms) {
+          slowestTool = { name: block.tool_name, duration_ms: dur };
+        }
+      }
     } else if (block.type === "compaction") {
       compactions++;
     }
@@ -460,7 +501,12 @@ export function computeSummary(timeline: SessionTimeline): SessionSummary {
     output_tokens: outputTokens,
     total_tokens: totalTokens,
     total_cost: totalCost,
+    cache_read: cacheRead,
+    cache_write: cacheWrite,
+    tool_duration_ms: toolDurationMs,
+    slowest_tool: slowestTool,
     duration_sec: durationSec,
     tools_used: toolsUsed,
+    turns_data: turnsData,
   };
 }

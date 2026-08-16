@@ -183,6 +183,8 @@ def parse_session(file_path):
                         "input": usage.get("input", 0),
                         "output": usage.get("output", 0),
                         "totalTokens": usage.get("totalTokens", 0),
+                        "cache_read": usage.get("cacheRead", 0),
+                        "cache_write": usage.get("cacheWrite", 0),
                         "cost": usage.get("cost"),
                     }
                 blocks.append(block)
@@ -295,7 +297,13 @@ def compute_summary(timeline):
     output_tokens = 0
     total_tokens = 0
     total_cost = 0.0
+    cache_read = 0
+    cache_write = 0
+    tool_duration_ms = 0
+    slowest_tool = None
     tools_used = {}
+    turns_data = []
+    current_turn = 0
 
     first_ts = None
     last_ts = None
@@ -310,6 +318,8 @@ def compute_summary(timeline):
         btype = block["type"]
         if btype == "user_input":
             turns += 1
+            current_turn += 1
+            turns_data.append({"turn": current_turn, "input": 0, "output": 0, "cache": 0, "cost": 0.0})
         elif btype == "llm_output":
             llm_calls += 1
             calls = block.get("tool_calls") or []
@@ -322,12 +332,26 @@ def compute_summary(timeline):
                 input_tokens += usage.get("input", 0)
                 output_tokens += usage.get("output", 0)
                 total_tokens += usage.get("totalTokens", 0)
+                cache_read += usage.get("cache_read", 0)
+                cache_write += usage.get("cache_write", 0)
                 cost = usage.get("cost") or {}
                 if cost.get("total"):
                     total_cost += cost["total"]
+                if current_turn >= 1 and current_turn <= len(turns_data):
+                    t = turns_data[current_turn - 1]
+                    t["input"] += usage.get("input", 0)
+                    t["output"] += usage.get("output", 0)
+                    t["cache"] += usage.get("cache_read", 0)
+                    t["cost"] += cost.get("total", 0) if isinstance(cost, dict) else 0
         elif btype == "tool_result":
             if block.get("is_error"):
                 errors += 1
+            det = block.get("details") or {}
+            dur = det.get("durationMs", 0) if isinstance(det, dict) else 0
+            if isinstance(dur, (int, float)) and dur > 0:
+                tool_duration_ms += dur
+                if slowest_tool is None or dur > slowest_tool["duration_ms"]:
+                    slowest_tool = {"name": block.get("tool_name", "unknown"), "duration_ms": dur}
         elif btype == "compaction":
             compactions += 1
 
@@ -344,8 +368,13 @@ def compute_summary(timeline):
         "output_tokens": output_tokens,
         "total_tokens": total_tokens,
         "total_cost": total_cost,
+        "cache_read": cache_read,
+        "cache_write": cache_write,
+        "tool_duration_ms": tool_duration_ms,
+        "slowest_tool": slowest_tool,
         "duration_sec": duration_sec,
         "tools_used": tools_used,
+        "turns_data": turns_data,
     }
 
 

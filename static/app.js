@@ -332,7 +332,10 @@ async function openSession(sessionId) {
 
   fetch("/api/sessions/" + encodeURIComponent(sessionId) + "/summary")
     .then((r) => r.json())
-    .then(renderTopbar)
+    .then((summary) => {
+      renderTopbar(summary);
+      renderStatsBlock(summary);
+    })
     .catch(() => {});
 
   toolCallIdToResult = {};
@@ -377,6 +380,44 @@ function renderSystemPromptBlock(prompt) {
       <span class="chev">▶</span> ⚙️ System prompt <span class="count">· ${chars} chars</span>
     </div>
     <div class="block-system-text" style="display:none;">${escapeHtml(prompt)}</div>
+  </div>`;
+}
+
+function renderTokenChart(turns) {
+  if (!turns || turns.length === 0) return '<div class="stats-empty">no token data</div>';
+  const W = 800, H = 120;
+  const maxTokens = Math.max(1, ...turns.map((t) => t.input + t.output));
+  const barW = W / turns.length;
+  let bars = "";
+  turns.forEach((t, i) => {
+    const inH = (t.input / maxTokens) * (H - 8);
+    const outH = (t.output / maxTokens) * (H - 8);
+    const x = i * barW;
+    const bw = Math.max(barW - 1, 0.6);
+    bars += `<rect x="${x}" y="${H - inH}" width="${bw}" height="${inH}" fill="var(--accent)" opacity="0.85"><title>Turn ${t.turn}: ${formatTokens(t.input)} in</title></rect>`;
+    bars += `<rect x="${x}" y="${H - inH - outH}" width="${bw}" height="${outH}" fill="var(--green)" opacity="0.85"><title>Turn ${t.turn}: ${formatTokens(t.output)} out</title></rect>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="token-chart">${bars}</svg>`;
+}
+
+function renderStatsBlock(summary) {
+  const el = $("#stats-block");
+  if (!el || !summary) return;
+  const totalInput = summary.input_tokens + summary.cache_read;
+  const cacheRate = totalInput > 0 ? Math.round((summary.cache_read / totalInput) * 100) : 0;
+  const parts = [
+    `⚡ ${formatTokens(summary.cache_read)} cache read (${cacheRate}% hit)`,
+    `⏱ ${formatDuration(summary.tool_duration_ms)} tool time`,
+    summary.slowest_tool ? `🐢 slowest: ${escapeHtml(summary.slowest_tool.name)} (${formatDuration(summary.slowest_tool.duration_ms)})` : "",
+  ].filter(Boolean);
+  el.innerHTML = `<div class="block block-stats">
+    <div class="block-stats-label" onclick="toggleCollapse(this)">
+      <span class="chev">▶</span> 📊 Session stats <span class="count">· ${parts.join(" · ")}</span>
+    </div>
+    <div class="block-stats-body" style="display:none;">
+      <div class="stats-legend">🔵 input · 🟢 output — tokens per turn</div>
+      ${renderTokenChart(summary.turns_data)}
+    </div>
   </div>`;
 }
 
@@ -455,6 +496,7 @@ function onTimelineScroll() {
 function renderTimeline(blocks) {
   const container = $("#timeline");
   let html = "";
+  html += '<div id="stats-block"></div>';
   if (currentTimeline && currentTimeline.system_prompt) {
     html += renderSystemPromptBlock(currentTimeline.system_prompt);
   }
@@ -519,6 +561,7 @@ function renderLlmBlock(block) {
   let usageStr = "";
   if (block.usage) {
     usageStr = `${formatTokens(block.usage.input)} in → ${formatTokens(block.usage.output)} out`;
+    if (block.usage.cache_read) usageStr += ` · ⚡ ${formatTokens(block.usage.cache_read)} cache`;
     if (block.usage.cost && block.usage.cost.total) usageStr += " · " + formatCost(block.usage.cost.total);
   }
   return `<div class="block block-llm">
@@ -545,7 +588,7 @@ function renderToolResultBlock(block) {
       <span>📤</span>
       <span class="${nameClass}">${escapeHtml(block.tool_name)}</span>
       ${duration ? `<span class="block-tool-duration">⏱ ${duration}</span>` : ""}
-      ${isError ? '<span class="block-tool-duration" style="color:var(--red)">⚠ error</span>' : ""}
+      ${isError ? `<span class="block-tool-duration error-msg">⚠ ${escapeHtml(truncate(block.output || "error", 100))}</span>` : ""}
       <span class="timestamp">${formatTime(block.timestamp)}</span>
       <span class="block-tool-chevron" id="chevron-${block.index}">▶</span>
     </div>
