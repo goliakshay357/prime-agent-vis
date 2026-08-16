@@ -441,17 +441,40 @@ function renderTurnItem(t) {
   </div>`;
 }
 
+function stepTitle(b) {
+  if (b.tool_calls && b.tool_calls.length) {
+    return "🔧 " + b.tool_calls.map((t) => t.name).join(", ");
+  }
+  if (b.text) return truncate(b.text.replace(/\n/g, " "), 40);
+  if (b.thinking) return "💭 thinking";
+  return "(empty)";
+}
+
+function renderStepItem(s) {
+  return `<div class="step-item" data-step="${s.turn}-${s.step}" onclick="scrollToStep(${s.turn}, ${s.step})">
+    <span class="step-item-label">Step ${s.step}</span>
+    <span class="step-item-title">${escapeHtml(s.title)}</span>
+  </div>`;
+}
+
 function renderTurnSidebar(blocks) {
   const sidebar = $("#turn-sidebar");
   if (!sidebar) return;
   let html = "";
-  let n = 0;
+  let turn = 0, step = 0;
   for (const b of blocks) {
     if (b.type === "user_input") {
-      n++;
-      html += renderTurnItem({ number: n, title: turnTitle(b.text) });
+      if (turn > 0) html += "</div>";
+      turn++;
+      step = 0;
+      html += renderTurnItem({ number: turn, title: turnTitle(b.text) });
+      html += '<div class="turn-steps">';
+    } else if (b.type === "llm_output") {
+      step++;
+      html += renderStepItem({ turn, step, title: stepTitle(b) });
     }
   }
+  if (turn > 0) html += "</div>";
   sidebar.innerHTML = html || '<div class="turn-sidebar-empty">No turns</div>';
 }
 
@@ -460,6 +483,14 @@ function scrollToTurn(n) {
   if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   document.querySelectorAll(".turn-item").forEach((it) => it.classList.remove("active"));
   const item = document.querySelector('.turn-item[data-turn="' + n + '"]');
+  if (item) item.classList.add("active");
+}
+
+function scrollToStep(turn, step) {
+  const el = document.getElementById("step-" + turn + "-" + step);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  document.querySelectorAll(".step-item").forEach((it) => it.classList.remove("active"));
+  const item = document.querySelector('.step-item[data-step="' + turn + '-' + step + '"]');
   if (item) item.classList.add("active");
 }
 
@@ -475,11 +506,27 @@ function updateActiveTurn() {
       break;
     }
   }
+  let currentStep = null;
+  for (const el of timeline.querySelectorAll(".block-llm")) {
+    if (el.getBoundingClientRect().top - timelineTop <= 80) {
+      currentStep = el.id.replace("step-", "");
+    } else {
+      break;
+    }
+  }
   document.querySelectorAll(".turn-item").forEach((it) => it.classList.remove("active"));
   const item = document.querySelector('.turn-item[data-turn="' + current + '"]');
   if (item) {
     item.classList.add("active");
     item.scrollIntoView({ block: "nearest" });
+  }
+  document.querySelectorAll(".step-item").forEach((it) => it.classList.remove("active"));
+  if (currentStep) {
+    const si = document.querySelector('.step-item[data-step="' + currentStep + '"]');
+    if (si) {
+      si.classList.add("active");
+      si.scrollIntoView({ block: "nearest" });
+    }
   }
 }
 
@@ -509,7 +556,7 @@ function renderTimeline(blocks) {
       html += renderTurnDivider(turn);
     }
     if (b.type === "user_input") html += renderUserBlock(b);
-    else if (b.type === "llm_output") { step++; html += renderLlmBlock(b, step); }
+    else if (b.type === "llm_output") { step++; html += renderLlmBlock(b, step, turn); }
     else if (b.type === "tool_result") html += renderToolResultBlock(b);
     else if (b.type === "custom_message") html += renderCustomMessageBlock(b);
     else if (b.type === "compaction") html += renderCompactionBlock(b);
@@ -528,7 +575,7 @@ function renderUserBlock(block) {
   </div>`;
 }
 
-function renderLlmBlock(block, step) {
+function renderLlmBlock(block, step, turn) {
   let body = "";
   if (block.thinking) {
     const chars = block.thinking.length;
@@ -566,7 +613,7 @@ function renderLlmBlock(block, step) {
     if (block.usage.cache_read) usageStr += ` · ⚡ ${formatTokens(block.usage.cache_read)} cache`;
     if (block.usage.cost && block.usage.cost.total) usageStr += " · " + formatCost(block.usage.cost.total);
   }
-  return `<div class="block block-llm">
+  return `<div class="block block-llm" id="step-${turn}-${step}">
     <div class="block-llm-header">
       <span class="block-llm-label">🤖 LLM output</span>
       ${step ? `<span class="step-label">Step ${step}</span>` : ""}
