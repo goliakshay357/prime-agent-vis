@@ -272,3 +272,7 @@ code.hint { font-family: ui-monospace, Menlo, monospace; background: var(--bg-ho
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+/* ─── Live kernel iframe panel ───────────────────────────────── */
+#kernel-panel { flex: 1; min-height: 0; display: flex; }
+#kernel-panel iframe { width: 100%; height: 100%; border: 0; }

@@ -19,6 +19,7 @@ let currentSessionId = null;
 let currentTimeline = null;
 let toolCallIdToResult = {};
 let toolCallIdToMeta = {};
+let liveInfo = null;
 
 const THEME_KEY = "pav-theme";
 const SUN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
@@ -248,6 +249,9 @@ function showHome() {
   $("#timeline-view").hidden = true;
   $("#home-view").hidden = false;
   closeDetail();
+  hideKernel();
+  const kt = $("#kernel-toggle");
+  if (kt) kt.hidden = true;
   renderHome();
 }
 function showTimelineView() {
@@ -256,10 +260,55 @@ function showTimelineView() {
   closeDetail();
 }
 
+function isLiveSession(id) {
+  return liveInfo != null && liveInfo.live_session_id === id;
+}
+function hideKernel() {
+  const panel = $("#kernel-panel");
+  if (panel) panel.hidden = true;
+  const timeline = $("#timeline");
+  if (timeline) timeline.hidden = false;
+  const kt = $("#kernel-toggle");
+  if (kt) kt.setAttribute("aria-pressed", "false");
+}
+function updateKernelToggle(sessionId) {
+  const kt = $("#kernel-toggle");
+  if (!kt) return;
+  if (isLiveSession(sessionId)) {
+    kt.hidden = false;
+  } else {
+    kt.hidden = true;
+    hideKernel();
+  }
+}
+function toggleKernel() {
+  const panel = $("#kernel-panel");
+  const timeline = $("#timeline");
+  if (panel.hidden) {
+    const iframe = $("#kernel-iframe");
+    if (iframe && !iframe.getAttribute("src")) iframe.setAttribute("src", liveInfo.jupyter_url);
+    timeline.hidden = true;
+    panel.hidden = false;
+    $("#kernel-toggle").setAttribute("aria-pressed", "true");
+  } else {
+    hideKernel();
+  }
+}
+function loadLiveInfo() {
+  fetch("/api/live")
+    .then((r) => r.json())
+    .then((d) => {
+      liveInfo = d;
+      if (currentSessionId) updateKernelToggle(currentSessionId);
+    })
+    .catch(() => { liveInfo = null; });
+}
+
 // ─── Timeline ─────────────────────────────────────────────────────
 async function openSession(sessionId) {
   currentSessionId = sessionId;
   showTimelineView();
+  updateKernelToggle(sessionId);
 
   const timelineEl = $("#timeline");
   timelineEl.innerHTML = '<div class="loading">Loading session timeline…</div>';
@@ -443,6 +492,8 @@ function bindEvents() {
     renderHome();
   });
 
+  $("#kernel-toggle").addEventListener("click", toggleKernel);
+
   // Delegate clicks on the session list (group collapse + session select).
   $("#session-list").addEventListener("click", (e) => {
     const header = e.target.closest(".group-header");
@@ -485,6 +536,7 @@ function init() {
   const sys = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
   applyTheme(saved || sys);
   bindEvents();
+  loadLiveInfo();
   loadSessions();
 }
 

@@ -17,6 +17,7 @@ Data source: ~/.prime/agent/sessions/*.jsonl
 """
 
 import json
+import os
 import re
 import sys
 from datetime import datetime
@@ -28,6 +29,8 @@ ROOT = Path(__file__).resolve().parent
 STATIC_DIR = ROOT / "static"
 SESSIONS_DIR = Path.home() / ".prime" / "agent" / "sessions"
 DEFAULT_PORT = 8765
+LIVE_SESSION_ID = os.environ.get("PRIME_VIS_LIVE_SESSION", "01a00950-b7dc-76e2-8f8d-5c2f99191da9")
+JUPYTER_URL = os.environ.get("PRIME_VIS_JUPYTER_URL", "http://localhost:8890/lab/tree/kernel-live.ipynb?token=kimi")
 
 MIME_TYPES = {
     ".html": "text/html; charset=utf-8",
@@ -360,6 +363,10 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split("?", 1)[0]
+
+        if path == "/api/live":
+            self._send_json({"live_session_id": LIVE_SESSION_ID, "jupyter_url": JUPYTER_URL})
+            return
 
         if path == "/api/sessions":
             self._send_json({"sessions": list_sessions()})
