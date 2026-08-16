@@ -4,6 +4,10 @@ A visualizer + debugger for [Prime Agent](https://github.com/PrimeIntellect-ai/p
 
 <img width="1425" height="733" alt="image" src="https://github.com/user-attachments/assets/caae1425-5a84-4fb1-b792-3d76bc23698b" />
 
+### See what is running inside the iPython kernal
+
+<img width="1426" height="735" alt="image" src="https://github.com/user-attachments/assets/d997ce29-ae35-4ea0-ad87-ebbc3ee2a37c" />
+
 ## Features
 
 - **Session explorer** — folder-level grouping, search, sort, dark/light theme
