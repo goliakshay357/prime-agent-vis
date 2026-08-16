@@ -70,12 +70,16 @@
         <button class="detail-close" onclick="closeDetail()" aria-label="Close">✕</button>
       </div>
       <div class="detail-row">
-        <div class="detail-half">
-          <div class="detail-label detail-label-input">Input — what the LLM sent to this tool</div>
+        <div class="detail-third">
+          <div class="detail-label detail-label-input">📥 What the LLM sent</div>
           <div class="detail-content" id="detail-input"></div>
         </div>
-        <div class="detail-half">
-          <div class="detail-label detail-label-output">Output — what the tool returned to the LLM</div>
+        <div class="detail-third">
+          <div class="detail-label detail-label-code">⚡ Code executed in the kernel</div>
+          <div class="detail-content" id="detail-code"></div>
+        </div>
+        <div class="detail-third">
+          <div class="detail-label detail-label-output">📤 What was sent back to the LLM</div>
           <div class="detail-content" id="detail-output"></div>
         </div>
       </div>

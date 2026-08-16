@@ -268,10 +268,11 @@ code.hint { font-family: ui-monospace, Menlo, monospace; background: var(--bg-ho
   display: flex; flex-direction: column; max-height: 45vh; flex-shrink: 0;
 }
 .detail-row { display: flex; flex: 1; overflow: hidden; }
-.detail-half { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.detail-half:first-child { border-right: 1px solid var(--border); }
+.detail-third { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.detail-third + .detail-third { border-left: 1px solid var(--border); }
 .detail-label { padding: 0.4rem 0.65rem; font-size: 0.64rem; font-weight: 600; color: var(--text-dim); background: var(--bg); border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0; }
 .detail-label-input { color: var(--orange); }
+.detail-label-code { color: var(--purple); }
 .detail-label-output { color: var(--green); }
 .detail-content { flex: 1; overflow: auto; padding: 0.6rem; font-family: ui-monospace, Menlo, monospace; font-size: 0.68rem; white-space: pre-wrap; word-break: break-word; background: var(--bg); }
 .detail-panel-bar { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.65rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }

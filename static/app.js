@@ -763,10 +763,10 @@ function toggleResult(index) {
   if (out.style.display === "none") { out.style.display = "block"; chevron.classList.add("expanded"); }
   else { out.style.display = "none"; chevron.classList.remove("expanded"); }
 }
-function formatToolInput(name, args) {
+function extractToolCode(name, args) {
   if (name === "ipython" && args && typeof args.code === "string") return args.code;
   if (name === "bash" && args && typeof args.command === "string") return args.command;
-  return prettyJson(args);
+  return null;
 }
 
 function showToolDetail(toolCallId) {
@@ -775,7 +775,12 @@ function showToolDetail(toolCallId) {
   const meta = toolCallIdToMeta[toolCallId];
   const result = toolCallIdToResult[toolCallId];
   $("#detail-title").textContent = (meta ? meta.name : "tool") + " — " + shortId(toolCallId);
-  $("#detail-input").innerHTML = escapeHtml(meta ? formatToolInput(meta.name, meta.arguments) : "(no arguments)");
+  // 1. what the LLM sent (raw tool-call arguments)
+  $("#detail-input").innerHTML = escapeHtml(meta ? prettyJson(meta.arguments) : "(no arguments)");
+  // 2. exact code that executed in the kernel cell
+  const code = meta ? extractToolCode(meta.name, meta.arguments) : null;
+  $("#detail-code").innerHTML = escapeHtml(code != null ? code : "(no code — see arguments)");
+  // 3. what was sent back to the LLM
   const outEl = $("#detail-output");
   outEl.innerHTML = escapeHtml(result ? (result.output || "(no output)") : "(no result)");
   outEl.style.color = result && result.is_error ? "var(--red)" : "";
