@@ -92,6 +92,7 @@ export interface SessionTimeline {
   model: string;
   thinking_level: string;
   system_prompt?: string;
+  tool_schemas?: { name: string; description: string }[];
   blocks: TimelineBlock[];
 }
 
@@ -171,6 +172,7 @@ export function parseSession(filePath: string): SessionTimeline | null {
   let model = "unknown";
   let thinkingLevel = "off";
   let systemPrompt: string | undefined;
+  let toolSchemas: { name: string; description: string }[] | undefined;
   const blocks: TimelineBlock[] = [];
   let blockIndex = 0;
 
@@ -270,6 +272,12 @@ export function parseSession(filePath: string): SessionTimeline | null {
       continue;
     }
 
+    // Available tools (captured by the extension at runtime)
+    if (type === "custom" && entry.customType === "tool_schemas" && Array.isArray(entry.data?.tools)) {
+      toolSchemas = entry.data.tools;
+      continue;
+    }
+
     // Custom message (extension-injected input sent to the LLM)
     if (type === "custom_message") {
       blocks.push({
@@ -317,6 +325,7 @@ export function parseSession(filePath: string): SessionTimeline | null {
     model,
     thinking_level: thinkingLevel,
     system_prompt: systemPrompt,
+    tool_schemas: toolSchemas,
     blocks,
   };
 }

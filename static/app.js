@@ -390,6 +390,19 @@ function renderSystemPromptBlock(prompt) {
   </div>`;
 }
 
+function renderToolsBlock(tools) {
+  const names = tools.map((t) => t.name).join(", ");
+  const body = tools.map((t) =>
+    `<div class="tool-entry"><span class="tool-entry-name">${escapeHtml(t.name)}</span><span class="tool-entry-desc">${escapeHtml(t.description || "")}</span></div>`
+  ).join("");
+  return `<div class="block block-tools">
+    <div class="block-tools-label" onclick="toggleCollapse(this)">
+      <span class="chev">▶</span> 🧰 Tools <span class="count">· ${tools.length} available · ${escapeHtml(truncate(names, 90))}</span>
+    </div>
+    <div class="block-tools-body" style="display:none;">${body}</div>
+  </div>`;
+}
+
 function renderTokenChart(turns) {
   if (!turns || turns.length === 0) return '<div class="stats-empty">no token data</div>';
   const W = 800, H = 120;
@@ -581,6 +594,9 @@ function renderTimeline(blocks) {
   let html = '<div id="stats-block"></div>';
   if (currentTimeline && currentTimeline.system_prompt) {
     html += renderSystemPromptBlock(currentTimeline.system_prompt);
+  }
+  if (currentTimeline && currentTimeline.tool_schemas && currentTimeline.tool_schemas.length) {
+    html += renderToolsBlock(currentTimeline.tool_schemas);
   }
   const r = renderBlocksRange(blocks, 0, 0, 0);
   html += r.html;

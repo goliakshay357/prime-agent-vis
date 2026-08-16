@@ -370,3 +370,14 @@ code.hint { font-family: ui-monospace, Menlo, monospace; background: var(--bg-ho
 .step-item.active { border-left-color: var(--green); background: var(--bg-hover); }
 .step-item-label { font-size: 0.6rem; font-weight: 600; color: var(--yellow); flex-shrink: 0; margin-top: 0.06rem; }
 .step-item-title { font-size: 0.66rem; color: var(--text-dim); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+
+/* ─── Tools block (session constants) ────────────────────────── */
+.block-tools { border-left: 3px solid var(--green); background: var(--bg-hover); }
+.block-tools-label { font-size: 0.68rem; color: var(--green); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.7rem 1rem 0.2rem; cursor: pointer; display: flex; align-items: center; gap: 0.35rem; user-select: none; flex-wrap: wrap; }
+.block-tools-label:hover { color: var(--text-bright); }
+.block-tools-label .chev { font-size: 0.6rem; }
+.block-tools-label .count { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--text-dim); font-size: 0.62rem; }
+.block-tools-body { padding: 0.2rem 1rem 0.75rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.25rem 1rem; }
+.tool-entry { display: flex; flex-direction: column; gap: 0.1rem; }
+.tool-entry-name { font-family: ui-monospace, Menlo, monospace; font-size: 0.72rem; color: var(--text-bright); }
+.tool-entry-desc { font-size: 0.68rem; color: var(--text-dim); }

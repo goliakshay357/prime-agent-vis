@@ -47,6 +47,10 @@ export default function (pi: ExtensionAPI) {
     if (systemPromptCaptured) return;
     systemPromptCaptured = true;
     pi.appendEntry("system_prompt", { prompt: event.systemPrompt });
+    try {
+      const tools = pi.getAllTools().map((t) => ({ name: t.name, description: t.description || "" }));
+      pi.appendEntry("tool_schemas", { tools });
+    } catch (e) {}
   });
 
   pi.registerCommand("vis", {
