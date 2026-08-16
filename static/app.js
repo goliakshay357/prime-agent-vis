@@ -501,13 +501,15 @@ function renderTimeline(blocks) {
     html += renderSystemPromptBlock(currentTimeline.system_prompt);
   }
   let turn = 0;
+  let step = 0;
   for (const b of blocks) {
     if (b.type === "user_input") {
       turn++;
+      step = 0;
       html += renderTurnDivider(turn);
     }
     if (b.type === "user_input") html += renderUserBlock(b);
-    else if (b.type === "llm_output") html += renderLlmBlock(b);
+    else if (b.type === "llm_output") { step++; html += renderLlmBlock(b, step); }
     else if (b.type === "tool_result") html += renderToolResultBlock(b);
     else if (b.type === "custom_message") html += renderCustomMessageBlock(b);
     else if (b.type === "compaction") html += renderCompactionBlock(b);
@@ -526,7 +528,7 @@ function renderUserBlock(block) {
   </div>`;
 }
 
-function renderLlmBlock(block) {
+function renderLlmBlock(block, step) {
   let body = "";
   if (block.thinking) {
     const chars = block.thinking.length;
@@ -567,6 +569,7 @@ function renderLlmBlock(block) {
   return `<div class="block block-llm">
     <div class="block-llm-header">
       <span class="block-llm-label">🤖 LLM output</span>
+      ${step ? `<span class="step-label">Step ${step}</span>` : ""}
       <span class="block-llm-model">${escapeHtml(block.model || "unknown")}</span>
       <span class="timestamp">${formatTime(block.timestamp)}</span>
       <span class="block-llm-usage">${usageStr}</span>
