@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prime Agent Vis</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- ═══ HOME VIEW ═══ -->
+    <div id="home-view">
+      <header class="topbar">
+        <h1 class="logo">Prime Agent Vis</h1>
+        <button id="theme-toggle" class="icon-btn" title="Toggle theme" aria-label="Toggle theme">
+          <!-- filled by JS -->
+        </button>
+      </header>
+
+      <div class="toolbar">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="search" type="text" placeholder="Search by id, title, or folder…" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="toolbar-controls">
+          <select id="sort" class="control" title="Sort sessions">
+            <option value="time">Newest</option>
+            <option value="messages">Most messages</option>
+            <option value="name">Name A–Z</option>
+          </select>
+          <select id="group-select" class="control" title="Group sessions">
+            <option value="folder">By folder</option>
+            <option value="date">By date</option>
+            <option value="none">Flat</option>
+          </select>
+          <button id="view-toggle" class="control toggle" aria-pressed="false" title="Toggle compact list view">Compact</button>
+        </div>
+      </div>
+
+      <main id="session-list" class="session-list"></main>
+
+      <footer class="footer" id="footer"></footer>
+    </div>
+
+    <!-- ═══ TIMELINE VIEW ═══ -->
+    <div id="timeline-view" hidden>
+      <header class="topbar">
+        <button id="back" class="icon-btn" title="Back to sessions" aria-label="Back to sessions">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        </button>
+        <div class="timeline-title" id="timeline-title"></div>
+        <div class="timeline-stats" id="timeline-stats"></div>
+      </header>
+      <main id="timeline" class="timeline"></main>
+    </div>
+
+    <!-- ═══ DETAIL PANEL ═══ -->
+    <div id="detail-panel" class="detail-panel" hidden>
+      <div class="detail-panel-bar">
+        <span class="detail-panel-bar-title" id="detail-title"></span>
+        <button class="detail-close" onclick="closeDetail()" aria-label="Close">✕</button>
+      </div>
+      <div class="detail-row">
+        <div class="detail-half">
+          <div class="detail-label detail-label-input">Input — what the LLM sent to this tool</div>
+          <div class="detail-content" id="detail-input"></div>
+        </div>
+        <div class="detail-half">
+          <div class="detail-label detail-label-output">Output — what the tool returned to the LLM</div>
+          <div class="detail-content" id="detail-output"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>
