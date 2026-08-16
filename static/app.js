@@ -697,13 +697,19 @@ function toggleResult(index) {
   if (out.style.display === "none") { out.style.display = "block"; chevron.classList.add("expanded"); }
   else { out.style.display = "none"; chevron.classList.remove("expanded"); }
 }
+function formatToolInput(name, args) {
+  if (name === "ipython" && args && typeof args.code === "string") return args.code;
+  if (name === "bash" && args && typeof args.command === "string") return args.command;
+  return prettyJson(args);
+}
+
 function showToolDetail(toolCallId) {
   const panel = $("#detail-panel");
   panel.hidden = false;
   const meta = toolCallIdToMeta[toolCallId];
   const result = toolCallIdToResult[toolCallId];
   $("#detail-title").textContent = (meta ? meta.name : "tool") + " — " + shortId(toolCallId);
-  $("#detail-input").innerHTML = escapeHtml(meta ? prettyJson(meta.arguments) : "(no arguments)");
+  $("#detail-input").innerHTML = escapeHtml(meta ? formatToolInput(meta.name, meta.arguments) : "(no arguments)");
   const outEl = $("#detail-output");
   outEl.innerHTML = escapeHtml(result ? (result.output || "(no output)") : "(no result)");
   outEl.style.color = result && result.is_error ? "var(--red)" : "";
